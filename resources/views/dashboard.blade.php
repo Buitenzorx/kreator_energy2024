@@ -15,9 +15,9 @@
                             <h3>SAMPAH ORGANIK</h3>
                         </div>
                         <div class="card-body">
-                            <p>Jarak: {{ $data['tong_organik']->last()->jarak ?? 'N/A' }} cm</p>
+                            <p>Jarak: <span id="jarak-organik">{{ $data['tong_organik']->last()->jarak ?? 'N/A' }}</span> cm</p>
                             <div class="tong-sampah" style="height: 100px; position: relative;">
-                                <div class="isi-sampah" style="height: {{ calculateHeight($data['tong_organik']->last()->jarak ?? 100) }}; background-color: {{ getColor($data['tong_organik']->last()->jarak ?? 100) }};">
+                                <div id="isi-organik" class="isi-sampah" style="height: {{ calculateHeight($data['tong_organik']->last()->jarak ?? 100) }}; background-color: {{ getColor($data['tong_organik']->last()->jarak ?? 100) }};">
                                 </div>
                             </div>
                         </div>
@@ -33,9 +33,9 @@
                             <h3>SAMPAH ANORGANIK</h3>
                         </div>
                         <div class="card-body">
-                            <p>Jarak: {{ $data['tong_non_organik']->last()->jarak ?? 'N/A' }} cm</p>
+                            <p>Jarak: <span id="jarak-anorganik">{{ $data['tong_non_organik']->last()->jarak ?? 'N/A' }}</span> cm</p>
                             <div class="tong-sampah" style="height: 100px; position: relative;">
-                                <div class="isi-sampah" style="height: {{ calculateHeight($data['tong_non_organik']->last()->jarak ?? 100) }}; background-color: {{ getColor($data['tong_non_organik']->last()->jarak ?? 100) }};">
+                                <div id="isi-anorganik" class="isi-sampah" style="height: {{ calculateHeight($data['tong_non_organik']->last()->jarak ?? 100) }}; background-color: {{ getColor($data['tong_non_organik']->last()->jarak ?? 100) }};">
                                 </div>
                             </div>
                         </div>
@@ -51,9 +51,9 @@
                             <h3>SAMPAH LOGAM</h3>
                         </div>
                         <div class="card-body">
-                            <p>Jarak: {{ $data['tong_logam']->last()->jarak ?? 'N/A' }} cm</p>
+                            <p>Jarak: <span id="jarak-logam">{{ $data['tong_logam']->last()->jarak ?? 'N/A' }}</span> cm</p>
                             <div class="tong-sampah" style="height: 100px; position: relative;">
-                                <div class="isi-sampah" style="height: {{ calculateHeight($data['tong_logam']->last()->jarak ?? 100) }}; background-color: {{ getColor($data['tong_logam']->last()->jarak ?? 100) }};">
+                                <div id="isi-logam" class="isi-sampah" style="height: {{ calculateHeight($data['tong_logam']->last()->jarak ?? 100) }}; background-color: {{ getColor($data['tong_logam']->last()->jarak ?? 100) }};">
                                 </div>
                             </div>
                         </div>
@@ -78,28 +78,29 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         const ctx = document.getElementById('jarakChart').getContext('2d');
         let jarakChart = new Chart(ctx, {
-            type: 'line', // Tipe grafik: garis
+            type: 'line',
             data: {
-                labels: @json($timestamps), // Waktu
+                labels: @json($timestamps),
                 datasets: [
                     {
                         label: 'Sampah Organik',
-                        data: @json($data['tong_organik']->pluck('jarak')), // Data jarak organik
+                        data: @json($data['tong_organik']->pluck('jarak')),
                         borderColor: 'green',
                         fill: false,
                     },
                     {
                         label: 'Sampah Anorganik',
-                        data: @json($data['tong_non_organik']->pluck('jarak')), // Data jarak anorganik
+                        data: @json($data['tong_non_organik']->pluck('jarak')),
                         borderColor: 'yellow',
                         fill: false,
                     },
                     {
                         label: 'Sampah Logam',
-                        data: @json($data['tong_logam']->pluck('jarak')), // Data jarak logam
+                        data: @json($data['tong_logam']->pluck('jarak')),
                         borderColor: 'red',
                         fill: false,
                     }
@@ -132,25 +133,49 @@
 
         function fetchData() {
             $.get('/api/tong-sampah-data', function(data) {
+                // Update jarak pada setiap card
+                $('#jarak-organik').text(data.organik[data.organik.length - 1] ?? 'N/A');
+                $('#jarak-anorganik').text(data.anorganik[data.anorganik.length - 1] ?? 'N/A');
+                $('#jarak-logam').text(data.logam[data.logam.length - 1] ?? 'N/A');
+                
+                // Update isi-sampah height and color
+                $('#isi-organik').css({
+                    'height': calculateHeight(data.organik[data.organik.length - 1] ?? 100),
+                    'background-color': getColor(data.organik[data.organik.length - 1] ?? 100)
+                });
+                $('#isi-anorganik').css({
+                    'height': calculateHeight(data.anorganik[data.anorganik.length - 1] ?? 100),
+                    'background-color': getColor(data.anorganik[data.anorganik.length - 1] ?? 100)
+                });
+                $('#isi-logam').css({
+                    'height': calculateHeight(data.logam[data.logam.length - 1] ?? 100),
+                    'background-color': getColor(data.logam[data.logam.length - 1] ?? 100)
+                });
+                
                 // Update grafik dengan data terbaru
                 jarakChart.data.labels = data.timestamps;
                 jarakChart.data.datasets[0].data = data.organik;
                 jarakChart.data.datasets[1].data = data.anorganik;
                 jarakChart.data.datasets[2].data = data.logam;
-
-                // Update jarak pada setiap card
-                $('#jarak-organik').text(data.organik[data.organik.length - 1]);
-                $('#jarak-anorganik').text(data.anorganik[data.anorganik.length - 1]);
-                $('#jarak-logam').text(data.logam[data.logam.length - 1]);
-
-                jarakChart.update(); // Memperbarui grafik
+                jarakChart.update();
             }).fail(function() {
                 console.error("Terjadi kesalahan saat mengambil data.");
             });
         }
 
-        // Autorefresh setiap 5 detik
-        setInterval(fetchData, 500);
+        function calculateHeight(jarak) {
+            const maxHeight = 100;
+            return Math.max(0, Math.min(maxHeight, maxHeight - jarak * (maxHeight / 100))) + 'px';
+        }
+
+        function getColor(jarak) {
+            if (jarak <= 20) return 'red';
+            else if (jarak <= 50) return 'yellow';
+            else if (jarak <= 100) return 'green';
+            return 'lightgray';
+        }
+
+        setInterval(fetchData, 5000);
     </script>
 @endsection
 
@@ -164,16 +189,14 @@
         } elseif ($jarak <= 100) {
             return 'green';
         }
-        return 'lightgray'; // Untuk jarak lebih dari 100 cm
+        return 'lightgray';
     }
 
     function calculateHeight($jarak)
     {
-        // Misalkan tinggi maksimum kotak adalah 100px
         $maxHeight = 100;
-        // Hitung tinggi berdasarkan jarak (0-100 cm)
         $height = max(0, min($maxHeight, $maxHeight - $jarak * ($maxHeight / 100)));
-        return $height . 'px'; // Mengembalikan nilai dalam piksel
+        return $height . 'px';
     }
 @endphp
 
