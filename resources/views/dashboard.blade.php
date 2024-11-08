@@ -157,7 +157,7 @@
 @php
     function getColor($jarak)
     {
-        if ($jarak <= 5) {
+        if ($jarak <= 20) {
             return 'red';
         } elseif ($jarak <= 50) {
             return 'yellow';
